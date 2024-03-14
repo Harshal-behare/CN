@@ -1,0 +1,143 @@
+#include <stdio.h>
+
+int arr[17];
+int parityBitsArray[4] = {0, 0, 0, 0};
+int traverse = 0;
+
+// Function to calculate the parity bit for error checking
+int calculate_parity(int *arr, int n, int k)
+{
+    int count = 0;
+    int p = 0;
+    int i = k;
+
+    while (i <= n)
+    {
+        if (count < k)
+        {
+            if (arr[i] == 1)
+                p++;
+            count++;
+            i++;
+        }
+        else
+        {
+            count = 0;
+            i = i + k;
+        }
+    }
+
+    if (p % 2 == 0)
+    {
+        arr[k] = 0;
+    }
+    else
+    {
+        arr[k] = 1;
+    }
+
+    if (p % 2 != 0)
+    {
+        p++;
+    }
+
+    if (p % 2 == 0)
+    {
+        parityBitsArray[traverse++] = 0;
+    }
+    else
+    {
+        parityBitsArray[traverse++] = 1;
+    }
+
+    return p;
+}
+
+int main()
+{
+    int n;
+    int data;
+    printf("Enter size : ");
+    scanf("%d", &n);
+    printf("Enter Data : ");
+    arr[0] = -1;
+    arr[1] = -1;
+    arr[2] = -1;
+
+    for (int i = 1; i <= n; i++)
+    {
+        if (i != 1 && i != 2 && i != 4 && i != 8 && i != 16)
+        {
+            scanf("%d", &data);
+            arr[i] = data;
+        }
+        else
+        {
+            n++;
+            arr[i] = -1;
+        }
+    }
+
+    for (int j = 1; j <= n; j++)
+    {
+        printf("%d ", arr[j]);
+    }
+
+    printf("\n\n");
+
+    calculate_parity(arr, n, 1);
+    calculate_parity(arr, n, 2);
+    calculate_parity(arr, n, 4);
+    calculate_parity(arr, n, 8);
+
+    printf("Calculated Parity Bits: ");
+    for (int i = 0; i < 4; i++)
+    {
+        printf("%d ", parityBitsArray[i]);
+    }
+    printf("\n\n");
+
+    // Simulate an error (flipping bit 5)
+    arr[5] = arr[5] == 0 ? 1 : 0;
+
+    printf("Data with Error: ");
+    for (int j = 1; j <= n; j++)
+    {
+        printf("%d ", arr[j]);
+    }
+    printf("\n\n");
+
+    traverse = 0;
+    int p1 = calculate_parity(arr, n, 1);
+    int p2 = calculate_parity(arr, n, 2);
+    int p4 = calculate_parity(arr, n, 4);
+    int p8 = calculate_parity(arr, n, 8);
+
+    printf("Recalculated Parity Bits: ");
+    for (int i = 0; i < 4; i++)
+    {
+        printf("%d ", parityBitsArray[i]);
+    }
+    printf("\n\n");
+
+    int errorPos = p1 + 2 * p2 + 4 * p4 + 8 * p8;
+
+    if (errorPos != 0)
+    {
+        printf("Error detected at position: %d\n", errorPos);
+        printf("Correcting error...\n");
+        arr[errorPos] = arr[errorPos] == 0 ? 1 : 0;
+        printf("Corrected Data: ");
+        for (int j = 1; j <= n; j++)
+        {
+            printf("%d ", arr[j]);
+        }
+        printf("\n");
+    }
+    else
+    {
+        printf("No error detected.\n");
+    }
+
+    return 0;
+}

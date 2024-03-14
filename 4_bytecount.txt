@@ -1,0 +1,103 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_FRAME_SIZE 100
+#define FLAG_BYTE 0x7E
+#define ESCAPE_BYTE 0x7D
+#define XOR_BYTE 0x20
+#define BIT_SEQUENCE 0x5E
+
+void byteCount(char *data, int len)
+{
+    char frame[MAX_FRAME_SIZE];
+
+    if (len > MAX_FRAME_SIZE - 1) {
+        printf("Data length exceeds maximum frame size.\n");
+        return;
+    }
+
+    frame[0] = len;
+    memcpy(frame + 1, data, len);
+
+    printf("Byte Count Framed Data: ");
+    for (int i = 0; i <= len; i++)
+        printf("%d ", frame[i]);
+    printf("\n");
+}
+
+void byteStuffing(char *data, int len)
+{
+    char frame[MAX_FRAME_SIZE * 2]; // Double the size for worst-case scenario (all bytes need to be escaped)
+
+    int j = 0;
+    frame[j++] = FLAG_BYTE;
+
+    for (int i = 0; i < len; i++)
+    {
+        if (data[i] == FLAG_BYTE || data[i] == ESCAPE_BYTE)
+        {
+            frame[j++] = ESCAPE_BYTE;
+            frame[j++] = (data[i] ^ XOR_BYTE);
+        }
+        else
+        {
+            frame[j++] = data[i];
+        }
+    }
+
+    frame[j++] = FLAG_BYTE;
+
+    printf("Byte Stuffing Framed Data: ");
+    for (int i = 0; i < j; i++)
+        printf("%d", frame[i]);
+    printf("\n");
+}
+
+void bitStuffing(char *data, int len)
+{
+    char frame[MAX_FRAME_SIZE * 2]; // Double the size for worst-case scenario (all bytes need to be escaped)
+
+    int j = 0;
+    frame[j++] = FLAG_BYTE;
+    int consecutiveOnes = 0;
+    for (int i = 0; i < len; i++)
+    {
+        if (data[i] == FLAG_BYTE || data[i] == ESCAPE_BYTE)
+        {
+            frame[j++] = ESCAPE_BYTE;
+            frame[j++] = (data[i] ^ BIT_SEQUENCE);
+            consecutiveOnes = 0;
+        }
+        else
+        {
+            frame[j++] = data[i];
+            if (data[i] == 1)
+                consecutiveOnes++;
+            else
+                consecutiveOnes = 0;
+            if (consecutiveOnes == 5)
+            {
+                frame[j++] = BIT_SEQUENCE;
+                consecutiveOnes = 0;
+            }
+        }
+    }
+
+    frame[j++] = FLAG_BYTE;
+
+    printf("Bit Stuffing Framed Data: ");
+    for (int i = 0; i < j; i++)
+        printf("%d", frame[i]);
+    printf("\n");
+}
+
+int main()
+{
+    char data[] = {0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0};
+    int len = sizeof(data) / sizeof(data[0]);
+
+    byteCount(data, len);
+    byteStuffing(data, len);
+    bitStuffing(data, len);
+    return 0;
+}
