@@ -1,0 +1,108 @@
+#include <stdio.h>
+#include <string.h>
+
+#define CRC_Key_LENGTH strlen(crcKey)
+
+char inputData[28];
+char crcResult[28];
+char crcKey[10];
+int inputDataLength, index_i, index_j;
+
+void performCRC();
+
+void XOR()
+{
+    printf("%s  ", crcResult);
+    printf("%s \n", crcKey);
+    for (index_j = 1; index_j < CRC_Key_LENGTH; index_j++)
+    {
+        crcResult[index_j] = ((crcResult[index_j] == crcKey[index_j]) ? '0' : '1');
+    }
+}
+
+void receiverCheck()
+{
+    printf("\nData received: %s \n", inputData);
+    performCRC();
+
+    int errorDetected = 0;
+
+    for (index_i = 0; index_i < CRC_Key_LENGTH - 1; index_i++)
+    {
+        if (crcResult[index_i] == '1')
+        {
+            errorDetected = 1;
+            break;
+        }
+    }
+
+    if (errorDetected)
+    {
+        printf("\nError in transmission \n\n");
+    }
+    else
+    {
+        printf("\nNo Error in transmission \n\n");
+    }
+}
+
+void performCRC()
+{
+
+    for (index_i = 0; index_i < CRC_Key_LENGTH; index_i++)
+    {
+        crcResult[index_i] = inputData[index_i];
+    }
+
+    do
+    {
+        // If the first bit of crcResult is '1', perform XOR operation
+        if (crcResult[0] == '1')
+        {
+            // Perform XOR
+            XOR();
+        }
+
+        // Shift crcResult left
+        for (index_j = 0; index_j < CRC_Key_LENGTH - 1; index_j++)
+        {
+            crcResult[index_j] = crcResult[index_j + 1];
+        }
+
+        crcResult[index_j] = inputData[index_i++];
+
+    } while (index_i <= inputDataLength + CRC_Key_LENGTH - 1);
+    printf("%s  ", crcResult);
+}
+
+int main()
+{
+    printf("\nEnter data to be transmitted: ");
+    scanf("%s", inputData);
+    printf("\nEnter the CRC-Key: ");
+    scanf("%s", crcKey);
+
+    inputDataLength = strlen(inputData);
+
+    for (index_i = inputDataLength; index_i < inputDataLength + CRC_Key_LENGTH - 1; index_i++)
+    {
+        inputData[index_i] = '0';
+    }
+
+    printf("\n *  Data padded with n-1 zeros: %s \n", inputData);
+
+    performCRC();
+
+    printf("\n *   CRC Key Append value is: %s \n", crcResult);
+
+    for (index_i = inputDataLength; index_i < inputDataLength + CRC_Key_LENGTH - 1; index_i++)
+    {
+        inputData[index_i] = crcResult[index_i - inputDataLength];
+    }
+
+    printf("\nData sent to the Sender: %s \n", inputData);
+
+    receiverCheck();
+
+    return 0;
+}
