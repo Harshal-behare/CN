@@ -1,0 +1,115 @@
+
+#include <stdio.h>
+#include <math.h>
+
+int main() {
+    // Transmission time and propagation time
+    float transmission_time = 1.0, propagation_time = 5.0;
+
+    // Calculate maximum number of packets to be transmitted
+    float max_packets = (int)(1 + 2 * (propagation_time / transmission_time));
+
+    // Number of bits in sequence number
+    int sequence_number_bits = log2(max_packets);
+
+    // Sender's window
+    float sender_window = pow(2, sequence_number_bits);
+
+    // Maximum throughput
+    double max_throughput = (sender_window / max_packets) * 100;
+
+    // Print calculated values
+    printf("Maximum number of packets to be transmitted: %.0f\n", max_packets);
+    printf("Number of bits in sequence number: %d\n", sequence_number_bits);
+    printf("Sender's Window: %.0f\n", sender_window);
+    printf("Maximum Throughput: %.2f%%\n", max_throughput);
+
+    // Simulate packet transmission and acknowledgment
+    int transmitted = 0, outstanding = 0, acknowledged = 0;
+    int time = 0;
+    int round_trip_time = transmission_time + 2 * propagation_time;
+
+    // Calculate outstanding packets
+    outstanding = max_packets - sender_window;
+
+    // User input for lost packet
+    int lost_packet;
+    printf("Enter the number of the lost packet (1-%d): ", (int)max_packets);
+    scanf("%d", &lost_packet);
+
+    // Initial transmission until sender's window is filled
+    while (1) {
+        printf("At Time %d: ", time);
+        printf("Transmitted: %d  ", transmitted);
+        printf("Outstanding: %d  ", outstanding);
+        printf("Acknowledge: %d\n", acknowledged);
+
+        if (time == sender_window) {
+            time = round_trip_time;
+            break;
+        }
+
+        if (transmitted == lost_packet) {
+            printf("Packet %d lost! Retransmitting...\n", lost_packet);
+            time++;
+            transmitted++;
+            continue;
+        }
+
+        transmitted++;
+        time++;
+    }
+
+    int out = outstanding;
+    int ti = time;
+
+    // Simulate acknowledgment for transmitted packets
+    while (1) {
+        time++;
+        transmitted++;
+        acknowledged++;
+        outstanding--;
+
+        printf("At Time %d: ", time);
+        printf("Transmitted: %d  ", transmitted);
+        printf("Outstanding: %d  ", outstanding);
+        printf("Acknowledge: %d\n", acknowledged);
+
+        if (time == ti + out) {
+            break;
+        }
+    }
+
+    // Simulate acknowledgment for remaining packets
+    while (1) {
+        time++;
+        acknowledged++;
+
+        printf("At Time %d: ", time);
+        printf("Transmitted: %d  ", transmitted);
+        printf("Outstanding: %d  ", outstanding);
+        printf("Acknowledge: %d\n", acknowledged);
+
+        if (time == ti + sender_window) {
+            break;
+        }
+    }
+
+    // Simulate acknowledgment for remaining packets after round trip time
+    time = ti + round_trip_time - 1;
+    while (1) {
+        time++;
+        acknowledged++;
+
+        printf("At Time %d: ", time);
+        printf("Transmitted: %d  ", transmitted);
+        printf("Outstanding: %d  ", outstanding);
+        printf("Acknowledge: %d\n", acknowledged);
+
+        if (acknowledged == max_packets) {
+            break;
+        }
+    }
+
+    return 0;
+}
